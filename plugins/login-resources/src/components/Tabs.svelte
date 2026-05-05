@@ -14,72 +14,69 @@
 -->
 
 <script lang="ts">
-  import { getCurrentLocation, Label, navigate } from '@hcengineering/ui'
+  import { Label } from '@hcengineering/ui'
+  import { NavLink } from '@hcengineering/presentation'
 
   import login from '../plugin'
+  import { getHref } from '../utils'
 
   export let loginState: 'login' | 'signup' | 'none' = 'none'
   export let signUpDisabled = false
-
-  const goTab = (path: string): void => {
-    const loc = getCurrentLocation()
-    loc.path[1] = path
-    loc.path.length = 2
-    navigate(loc)
-  }
 </script>
 
 <div class="flex-row-center caption">
   {#if !signUpDisabled}
-    <a
-      class="title"
-      class:selected={loginState === 'signup'}
-      href="."
-      on:click|preventDefault={() => {
-        if (loginState !== 'signup') goTab('signup')
-      }}
-    >
-      <Label label={login.string.SignUp} />
-    </a>
+    <span class="title" class:selected={loginState === 'signup'}>
+      <NavLink href={getHref('signup')}>
+        <Label label={login.string.SignUp} />
+      </NavLink>
+    </span>
   {/if}
-  <a
-    class="title"
-    class:selected={loginState === 'login'}
-    href="."
-    on:click|preventDefault={() => {
-      if (loginState !== 'login') goTab('login')
-    }}
-  >
-    <Label label={login.string.LogIn} />
-  </a>
+  <span class="title" class:selected={loginState === 'login'}>
+    <NavLink href={getHref('login')}>
+      <Label label={login.string.LogIn} />
+    </NavLink>
+  </span>
 </div>
 
 <style>
   .title {
+    display: inline-flex;
     font-weight: 500;
     font-size: 1.25rem;
     color: var(--theme-caption-color);
-  }
-  .caption a {
     padding-bottom: 0.375rem;
     border-bottom: 2px solid var(--theme-caption-color);
+  }
 
-    &:not(.selected) {
-      color: var(--theme-dark-color);
-      border-bottom-color: transparent;
+  .caption .title :global(a) {
+    color: inherit;
 
-      &:hover {
-        color: var(--theme-caption-color);
-      }
-    }
-    &.selected {
-      cursor: default;
-    }
-    &:first-child {
-      margin-right: 1.75rem;
-    }
     &:hover {
       text-decoration: none;
+    }
+  }
+
+  .caption .title:not(.selected) {
+    color: var(--theme-dark-color);
+    border-bottom-color: transparent;
+
+    &:hover {
+      color: var(--theme-caption-color);
+    }
+  }
+
+  .caption .title.selected {
+    cursor: default;
+  }
+
+  .caption .title:first-child {
+    margin-right: 1.75rem;
+  }
+
+  .caption .title :global(a) {
+    &:active {
+      color: var(--theme-dark-color);
     }
   }
 </style>
