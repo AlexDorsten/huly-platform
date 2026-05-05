@@ -30,6 +30,19 @@ The GitHub service integration uses a GitHub App and relies on:
 Important:
 `GITHUB_CLIENT_ID` and `GITHUB_CLIENTID` are different variables for different features.
 
+Also note that the secret name `GITHUB_CLIENT_SECRET` is reused in documentation and deployments for both contexts.
+That only stays unambiguous if both flows are backed by the same GitHub App or the same client credentials.
+
+If you use separate GitHub applications for:
+
+- OAuth login
+- GitHub repository integration
+
+then a single shared top-level env naming scheme becomes ambiguous.
+In that case you should keep the credentials separated in your deployment layer and map them explicitly to the process that needs them.
+
+This guide focuses on the GitHub App integration flow.
+
 ## Prerequisites
 
 Before starting, make sure:
@@ -128,7 +141,8 @@ GITHUB_WEBHOOK_SECRET=<random-webhook-secret>
 Important:
 
 - do not truncate the private key
-- do not accidentally use the OAuth login variable name `GITHUB_CLIENT_ID`
+- do not accidentally use the OAuth login variable name `GITHUB_CLIENT_ID` where the GitHub App client ID `GITHUB_CLIENTID` is required
+- `GITHUB_CLIENT_SECRET` is only safe as a single deployment variable if it really belongs to the same GitHub App and flow you are configuring here
 - after editing the env file, always validate with `docker compose config`
 
 If your secret handling does not support multiline values cleanly, store the private key using a mechanism your Compose setup actually supports and verify that the container receives the exact PEM content.
@@ -348,6 +362,15 @@ If you want both features, you may need both configurations:
 - GitHub App service integration for repository synchronization
 
 Do not assume that configuring one automatically configures the other.
+
+The important limitation is that Huly distinguishes the client IDs more clearly than the deployment variable naming does:
+
+- OAuth login expects `GITHUB_CLIENT_ID`
+- GitHub App integration expects `GITHUB_CLIENTID`
+- both setups are often documented with a `GITHUB_CLIENT_SECRET`
+
+So if you use different GitHub apps for those two flows, you should not treat one shared `GITHUB_CLIENT_SECRET` name as magically universal.
+Instead, keep the two credential sets distinct in your secret store or deployment templates and only map the correct pair into each runtime.
 
 In particular:
 
