@@ -34,6 +34,7 @@ export function registerOpenid (
   const openidClientId = process.env.OPENID_CLIENT_ID
   const openidClientSecret = process.env.OPENID_CLIENT_SECRET
   const issuer = process.env.OPENID_ISSUER
+  const idTokenSigningAlg = process.env.OPENID_ID_TOKEN_SIGNING_ALG
   const name = 'openid'
   const displayName = process.env.OPENID_DISPLAY_NAME
 
@@ -44,20 +45,34 @@ export function registerOpenid (
     .then((issuerObj) => {
       measureCtx.info('Discovered issuer', { issuer: issuerObj })
 
-      const client = new issuerObj.Client({
+      const clientMetadata: Record<string, any> = {
         client_id: openidClientId,
         client_secret: openidClientSecret,
         redirect_uris: [concatLink(accountsUrl, redirectURL)],
         response_types: ['code']
-      })
+      }
+
+      if (idTokenSigningAlg !== undefined && idTokenSigningAlg !== '') {
+        clientMetadata.id_token_signed_response_alg = idTokenSigningAlg
+      }
+
+      const client = new issuerObj.Client(clientMetadata)
       measureCtx.info('Created OIDC client')
 
-      passport.use(
-        'oidc',
-        new Strategy({ client, passReqToCallback: true }, (req: any, tokenSet: any, userinfo: any, done: any) => {
+      const strategy = new Strategy(
+        { client, passReqToCallback: true },
+        (req: any, tokenSet: any, userinfo: any, done: any) => {
           return done(null, userinfo)
-        })
+        }
       )
+
+      // When the account service is mounted behind a reverse-proxy prefix such as
+      // "/_accounts", passport only sees the stripped internal callback path.
+      // openid-client then validates the callback against the wrong URL unless we
+      // reconstruct the public callback URL from ACCOUNTS_URL.
+      ;(strategy as any).currentUrl = (req: any) => new URL(concatLink(accountsUrl, req.url))
+
+      passport.use('oidc', strategy)
       measureCtx.info('Registered OIDC strategy')
     })
     .catch((err) => {

@@ -19,6 +19,7 @@ If you're primarily interested in self-hosting Huly without the intention to mod
 This project offers a convenient method to host Huly using `docker`, designed for ease of use and quick setup. Explore this option to effortlessly enjoy Huly on your own server.
 
 For a detailed self-hosted GitHub integration guide, see [docs/github-integration.md](./docs/github-integration.md).
+For OpenID Connect login setup notes, including reverse-proxy and Keycloak-specific details, see [docs/oidc-integration.md](./docs/oidc-integration.md).
 
 ## Activity
 

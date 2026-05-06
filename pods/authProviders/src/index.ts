@@ -44,8 +44,28 @@ export function registerProviders (
     return
   }
 
+  const useSecureCookies = accountsUrl.startsWith('https://') || frontUrl.startsWith('https://')
+
+  // Auth providers rely on the session across cross-site redirects.
+  // Behind a reverse proxy we must trust X-Forwarded-Proto so secure cookies
+  // can be issued correctly, and embedded/mobile browsers are more reliable
+  // when the session cookie is explicitly marked for cross-site use.
+  app.proxy = true
   app.keys = [serverSecret]
-  app.use(session({}, app))
+  app.use(
+    session(
+      {
+        key: 'huly.auth',
+        maxAge: 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        signed: true,
+        renew: true,
+        secure: useSecureCookies,
+        sameSite: useSecureCookies ? 'none' : 'lax'
+      },
+      app
+    )
+  )
   app.use(passport.initialize())
   app.use(passport.session())
 
